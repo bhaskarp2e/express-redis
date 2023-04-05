@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import { createClient } from 'redis';
 import { redisInst} from "../config/redis";
+import { connect, Channel } from 'amqplib/callback_api';
+
 
 const app = express();
 const port = 4002;
@@ -17,7 +19,7 @@ app.get('/', async(req: Request, res: Response) => {
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
-  
+  // connectRabbitMQ()
 
 });
 
@@ -48,6 +50,38 @@ app.listen(port, () => {
 // console.log("CheckVal",value);
 // await client.disconnect();
 // }
+
+
+const connectRabbitMQ = () => {
+  connect('amqp://localhost:4003', (err, connection) => {
+    if (err) {
+      throw err;
+    }
+
+    connection.createChannel((err, channel) => {
+      if (err) {
+        throw err;
+      }
+
+      // Create a queue for receiving messages
+      const queueName = 'exampleQueue';
+      channel.assertQueue(queueName, { durable: false });
+
+      // Listen for messages on the queue
+      channel.consume(
+        queueName,
+        (message) => {
+          console.log(`Received message: ${message.content.toString()}`);
+        },
+        { noAck: true }
+      );
+
+      // Send a message to the queue
+      const message = 'Hello, world!';
+      channel.sendToQueue(queueName, Buffer.from(message));
+    });
+  });
+};
 
 
 
