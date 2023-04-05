@@ -1,24 +1,26 @@
 import express, { Request, Response } from 'express';
 import { createClient } from 'redis';
-import {redisClientConnection, redisClient} from "../config/redis";
+import { redisInst} from "../config/redis";
 
 const app = express();
 const port = 4002;
+global.redisClient = redisInst;
+// const newRedisConn = new redisClientConnection();
 
-app.get('/', (req: Request, res: Response) => {
+
+
+app.get('/', async(req: Request, res: Response) => {
+   await redisInst.setKey('keyone','valueone');
+   await redisInst.getKey('keyone');
   res.send('Hello World!');
 });
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
   
-  //calling redis connection
-  // redisConnection();
-  redisClientConnection()
+
 });
 
-
-const redisUrl = `127.0.0.1`
 
 // const client = createClient();
 
@@ -47,10 +49,6 @@ const redisUrl = `127.0.0.1`
 // await client.disconnect();
 // }
 
-setTimeout(()=>{
-
-  redisClient.set('key3',"valthree")
-},5000)
 
 
 

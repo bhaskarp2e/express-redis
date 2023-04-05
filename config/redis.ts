@@ -1,33 +1,90 @@
 import { createClient } from 'redis';
 
 //redis client
-let redisClient:any;
+// let redisClient: any;
+
+let redisClient;
+
 
 const client = createClient({
-  socket:{
-      host: 'localhost',
-      port: 6379
+  socket: {
+    host: 'localhost',
+    port: 6379
   }
-    // ,
-    // password: 'pass123',
-  });
+  // ,
+  // password: 'pass123',
+});
 
-async function redisClientConnection(){
+let redisInst = (function () {
 
-client.on('error', err => console.log('Redis Client Error', err));
+  if (redisClient) {
+    console.log("can't inititate redis connection")
+    throw new Error("New instance cannot be created!!");
+  }
 
 
+  //set redis connection instance
 
-await client.connect();
+  async function connectRedis() {
 
-redisClient = client;
+    try {
+      await client.connect();
+      console.log("redis connected")
+      redisClient = client;
+      return client;
 
-await client.set('keyone', 'value');
-const value = await client.get('keyone');
-console.log("CheckVal",value);
-// await client.disconnect();
-}
+    } catch (err) {
+      console.log("connectRedis", err);
+    }
+  }
 
-export {redisClientConnection, redisClient};
+  async function disConnectRedis() {
+    await redisClient.disconnect();
+    redisClient = null;
+    return client;
+  }
+
+
+  // redisInstance = this;
+
+
+  return {
+
+    setKey: async function (key, val) {
+
+      try {
+        if (!redisClient) {
+          redisClient = await connectRedis()
+        }
+        await redisClient.set(key, val);
+
+      } catch (err) {
+
+      }
+    },
+
+    getKey: async function (key) {
+
+      try {
+        if (!redisClient) {
+          console.log("getKeyInstance")
+          redisClient = connectRedis();
+        }
+        const resp = await client.get(key);
+        console.log("respKey", key, resp);
+
+      } catch (err) {
+
+      }
+
+
+    }
+
+
+  }
+
+}())
+
+export {  redisInst };
 
 
