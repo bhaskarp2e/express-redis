@@ -2,18 +2,28 @@ import express, { Request, Response } from 'express';
 import { createClient } from 'redis';
 import { redisInst} from "../config/redis";
 import { connect, Channel } from 'amqplib/callback_api';
-
+import {connectRabbitMQ, queueOne} from "../config/rabitmq";
 
 const app = express();
 const port = 4002;
 global.redisClient = redisInst;
 // const newRedisConn = new redisClientConnection();
 
-
+connectRabbitMQ();
 
 app.get('/', async(req: Request, res: Response) => {
    await redisInst.setKey('keyone','valueone');
    await redisInst.getKey('keyone');
+
+   const message = 'Hello, world!';
+    const queueName = 'exampleQueue';
+    console.log("rabbitmq before")
+
+   await queueOne(queueName,message);
+   console.log("rabbitmq connected")
+   console.log("rabbitmq after")
+
+
   res.send('Hello World!');
 });
 
@@ -52,36 +62,36 @@ app.listen(port, () => {
 // }
 
 
-const connectRabbitMQ = () => {
-  connect('amqp://localhost:4003', (err, connection) => {
-    if (err) {
-      throw err;
-    }
+// const connectRabbitMQ = () => {
+//   connect('amqp://localhost', (err, connection) => {
+//     if (err) {
+//       throw err;
+//     }
 
-    connection.createChannel((err, channel) => {
-      if (err) {
-        throw err;
-      }
+//     connection.createChannel((err, channel) => {
+//       if (err) {
+//         throw err;
+//       }
 
-      // Create a queue for receiving messages
-      const queueName = 'exampleQueue';
-      channel.assertQueue(queueName, { durable: false });
+//       // Create a queue for receiving messages
+//       const queueName = 'exampleQueue';
+//       channel.assertQueue(queueName, { durable: false });
 
-      // Listen for messages on the queue
-      channel.consume(
-        queueName,
-        (message) => {
-          console.log(`Received message: ${message.content.toString()}`);
-        },
-        { noAck: true }
-      );
+//       // Listen for messages on the queue
+//       channel.consume(
+//         queueName,
+//         (message) => {
+//           console.log(`Received message: ${message.content.toString()}`);
+//         },
+//         { noAck: true }
+//       );
 
-      // Send a message to the queue
-      const message = 'Hello, world!';
-      channel.sendToQueue(queueName, Buffer.from(message));
-    });
-  });
-};
+//       // Send a message to the queue
+//       const message = 'Hello, world!';
+//       channel.sendToQueue(queueName, Buffer.from(message));
+//     });
+//   });
+// };
 
 
 
