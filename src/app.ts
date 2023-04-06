@@ -11,18 +11,13 @@ global.redisClient = redisInst;
 
 connectRabbitMQ();
 
-app.get('/', async(req: Request, res: Response) => {
+app.get('/', async(req: Request, res: Response) => { 
    await redisInst.setKey('keyone','valueone');
    await redisInst.getKey('keyone');
 
    const message = 'Hello, world!';
     const queueName = 'exampleQueue';
-    console.log("rabbitmq before")
-
    await queueOne(queueName,message);
-   console.log("rabbitmq connected")
-   console.log("rabbitmq after")
-
 
   res.send('Hello World!');
 });
